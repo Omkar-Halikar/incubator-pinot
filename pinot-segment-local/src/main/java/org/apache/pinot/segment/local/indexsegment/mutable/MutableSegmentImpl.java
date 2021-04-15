@@ -21,7 +21,6 @@ package org.apache.pinot.segment.local.indexsegment.mutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import it.unimi.dsi.fastutil.ints.IntArrays;
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -742,7 +741,7 @@ public class MutableSegmentImpl implements MutableSegment {
     }
   }
 
-  public Map<String,IndexContainer> getIndexContainerMap() {
+  public Map<String, IndexContainer> getIndexContainerMap() {
     return _indexContainerMap;
   }
 

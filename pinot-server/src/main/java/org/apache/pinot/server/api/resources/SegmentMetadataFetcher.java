@@ -82,9 +82,9 @@ public class SegmentMetadataFetcher {
         Map<String, ColumnIndexContainer> columnIndexContainerMap = immutableSegmentImpl.getIndexContainerMap();
         columnIndexMap = getSegmentColumnIndexes(columnIndexContainerMap);
       }
-    }else if(segmentDataManager instanceof RealtimeSegmentDataManager){
+    } else if (segmentDataManager instanceof RealtimeSegmentDataManager) {
       RealtimeSegmentDataManager realtimeSegmentDataManager = (RealtimeSegmentDataManager) segmentDataManager;
-      MutableSegmentImpl mutableSegment = (MutableSegmentImpl)realtimeSegmentDataManager.getSegment();
+      MutableSegmentImpl mutableSegment = (MutableSegmentImpl) realtimeSegmentDataManager.getSegment();
       Map<String, IndexContainer> indexContainerMap = mutableSegment.getIndexContainerMap();
       columnIndexMap = getSegmentColumnIndexes(indexContainerMap);
     }
@@ -95,7 +95,7 @@ public class SegmentMetadataFetcher {
    * Helper to loop through column index container to create a index map as follows for each column:
    * {<"bloom-filter", "YES">, <"dictionary", "NO">}
    */
-  private static <T extends ColumnIndexContainer> Map<String, Map<String, String>> getSegmentColumnIndexes(Map<String,T> columnIndexContainerMap) {
+  private static <T extends ColumnIndexContainer> Map<String, Map<String, String>> getSegmentColumnIndexes(Map<String, T> columnIndexContainerMap) {
     Map<String, Map<String, String>> columnIndexMap = new LinkedHashMap<>();
     for (Map.Entry<String, T> entry : columnIndexContainerMap.entrySet()) {
       ColumnIndexContainer columnIndexContainer = entry.getValue();

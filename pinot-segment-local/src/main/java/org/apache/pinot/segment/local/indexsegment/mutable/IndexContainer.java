@@ -92,8 +92,8 @@ public class IndexContainer implements ColumnIndexContainer {
     _nullValueVector = nullValueVector;
   }
 
-  DataSource toDataSource(int _numDocsIndexed) {
-    return new MutableDataSource(_fieldSpec, _numDocsIndexed, _numValuesInfo._numValues,
+  DataSource toDataSource(int numDocsIndexed) {
+    return new MutableDataSource(_fieldSpec, numDocsIndexed, _numValuesInfo._numValues,
         _numValuesInfo._maxNumValuesPerMVEntry, _partitionFunction, _partitions, _minValue, _maxValue, _forwardIndex,
         _dictionary, _invertedIndex, _rangeIndex, _textIndex, _enableFST, _jsonIndex, _h3Index, _bloomFilter,
         _nullValueVector);
