@@ -18,7 +18,6 @@
  */
 package org.apache.pinot.plugin.stream.kafka20;
 
-import io.netty.util.NetUtil;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -55,8 +54,7 @@ public class KafkaPartitionLevelConsumerTest {
   private static final String TEST_TOPIC_2 = "bar";
   private static final int NUM_MSG_PRODUCED_PER_PARTITION = 1000;
 
-  private MiniKafkaCluster kafkaCluster;
-  private String brokerAddress;
+  private static MiniKafkaCluster kafkaCluster;
 
   @BeforeClass
   public void setup()
@@ -64,7 +62,6 @@ public class KafkaPartitionLevelConsumerTest {
     kafkaCluster = new MiniKafkaCluster.Builder().newServer("0").build();
     LOGGER.info("Trying to start MiniKafkaCluster");
     kafkaCluster.start();
-    brokerAddress = getKafkaBroker();
     kafkaCluster.createTopic(TEST_TOPIC_1, 1, 1);
     kafkaCluster.createTopic(TEST_TOPIC_2, 2, 1);
     Thread.sleep(STABILIZE_SLEEP_DELAYS);
@@ -74,7 +71,7 @@ public class KafkaPartitionLevelConsumerTest {
 
   private void produceMsgToKafka() {
     Properties props = new Properties();
-    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerAddress);
+    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getKakfaBroker());
     props.put(ProducerConfig.CLIENT_ID_CONFIG, "clientId");
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
@@ -87,8 +84,8 @@ public class KafkaPartitionLevelConsumerTest {
     }
   }
 
-  private String getKafkaBroker() {
-    return NetUtil.LOCALHOST.getHostAddress() + ":" + kafkaCluster.getKafkaServerPort(0);
+  private String getKakfaBroker() {
+    return "127.0.0.1:" + kafkaCluster.getKafkaServerPort(0);
   }
 
   @AfterClass
@@ -104,7 +101,7 @@ public class KafkaPartitionLevelConsumerTest {
       throws Exception {
     String streamType = "kafka";
     String streamKafkaTopicName = "theTopic";
-    String streamKafkaBrokerList = brokerAddress;
+    String streamKafkaBrokerList = getKakfaBroker();
     String streamKafkaConsumerType = "simple";
     String clientId = "clientId";
     String tableNameWithType = "tableName_REALTIME";
@@ -148,7 +145,7 @@ public class KafkaPartitionLevelConsumerTest {
   @Test
   public void testGetPartitionCount() {
     String streamType = "kafka";
-    String streamKafkaBrokerList = brokerAddress;
+    String streamKafkaBrokerList = getKakfaBroker();
     String streamKafkaConsumerType = "simple";
     String clientId = "clientId";
     String tableNameWithType = "tableName_REALTIME";
@@ -183,7 +180,7 @@ public class KafkaPartitionLevelConsumerTest {
       throws Exception {
     String streamType = "kafka";
     String streamKafkaTopicName = "theTopic";
-    String streamKafkaBrokerList = brokerAddress;
+    String streamKafkaBrokerList = getKakfaBroker();
     String streamKafkaConsumerType = "simple";
     String clientId = "clientId";
     String tableNameWithType = "tableName_REALTIME";
@@ -213,7 +210,7 @@ public class KafkaPartitionLevelConsumerTest {
   private void testFetchOffsets(String topic)
       throws Exception {
     String streamType = "kafka";
-    String streamKafkaBrokerList = brokerAddress;
+    String streamKafkaBrokerList = getKakfaBroker();
     String streamKafkaConsumerType = "simple";
     String clientId = "clientId";
     String tableNameWithType = "tableName_REALTIME";
@@ -248,7 +245,7 @@ public class KafkaPartitionLevelConsumerTest {
   private void testConsumer(String topic)
       throws TimeoutException {
     String streamType = "kafka";
-    String streamKafkaBrokerList = brokerAddress;
+    String streamKafkaBrokerList = getKakfaBroker();
     String streamKafkaConsumerType = "simple";
     String clientId = "clientId";
     String tableNameWithType = "tableName_REALTIME";
@@ -263,28 +260,30 @@ public class KafkaPartitionLevelConsumerTest {
     StreamConfig streamConfig = new StreamConfig(tableNameWithType, streamConfigMap);
 
     final StreamConsumerFactory streamConsumerFactory = StreamConsumerFactoryProvider.create(streamConfig);
-    int numPartitions = new KafkaStreamMetadataProvider(clientId, streamConfig).fetchPartitionCount(10000);
+    int numPartitions =
+        new KafkaStreamMetadataProvider(clientId, streamConfig).fetchPartitionCount(10000);
     for (int partition = 0; partition < numPartitions; partition++) {
       final PartitionLevelConsumer consumer = streamConsumerFactory.createPartitionLevelConsumer(clientId, partition);
 
       // Test consume a large batch, only 500 records will be returned.
-      final MessageBatch batch1 =
-          consumer.fetchMessages(new LongMsgOffset(0), new LongMsgOffset(NUM_MSG_PRODUCED_PER_PARTITION), 10000);
+      final MessageBatch batch1 = consumer.fetchMessages(new LongMsgOffset(0),
+          new LongMsgOffset(NUM_MSG_PRODUCED_PER_PARTITION), 10000);
       Assert.assertEquals(batch1.getMessageCount(), 500);
       for (int i = 0; i < batch1.getMessageCount(); i++) {
         final byte[] msg = (byte[]) batch1.getMessageAtIndex(i);
         Assert.assertEquals(new String(msg), "sample_msg_" + i);
       }
       // Test second half batch
-      final MessageBatch batch2 =
-          consumer.fetchMessages(new LongMsgOffset(500), new LongMsgOffset(NUM_MSG_PRODUCED_PER_PARTITION), 10000);
+      final MessageBatch batch2 = consumer.fetchMessages(new LongMsgOffset(500),
+          new LongMsgOffset(NUM_MSG_PRODUCED_PER_PARTITION), 10000);
       Assert.assertEquals(batch2.getMessageCount(), 500);
       for (int i = 0; i < batch2.getMessageCount(); i++) {
         final byte[] msg = (byte[]) batch2.getMessageAtIndex(i);
         Assert.assertEquals(new String(msg), "sample_msg_" + (500 + i));
       }
       // Some random range
-      final MessageBatch batch3 = consumer.fetchMessages(new LongMsgOffset(10), new LongMsgOffset(35), 10000);
+      final MessageBatch batch3 = consumer.fetchMessages(new LongMsgOffset(10),
+          new LongMsgOffset(35), 10000);
       Assert.assertEquals(batch3.getMessageCount(), 25);
       for (int i = 0; i < batch3.getMessageCount(); i++) {
         final byte[] msg = (byte[]) batch3.getMessageAtIndex(i);
