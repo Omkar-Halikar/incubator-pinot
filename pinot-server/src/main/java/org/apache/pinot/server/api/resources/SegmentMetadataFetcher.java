@@ -29,7 +29,10 @@ import java.util.Set;
 import org.apache.pinot.core.data.manager.SegmentDataManager;
 import org.apache.pinot.core.data.manager.offline.ImmutableSegmentDataManager;
 import org.apache.pinot.segment.local.indexsegment.immutable.ImmutableSegmentImpl;
+import org.apache.pinot.segment.local.indexsegment.mutable.MutableSegmentImpl;
 import org.apache.pinot.segment.local.segment.index.metadata.SegmentMetadataImpl;
+import org.apache.pinot.core.data.manager.realtime.RealtimeSegmentDataManager;
+import org.apache.pinot.segment.local.indexsegment.mutable.IndexContainer;
 import org.apache.pinot.segment.spi.ImmutableSegment;
 import org.apache.pinot.segment.spi.index.column.ColumnIndexContainer;
 import org.apache.pinot.spi.utils.JsonUtils;
@@ -77,8 +80,13 @@ public class SegmentMetadataFetcher {
       if (immutableSegment instanceof ImmutableSegmentImpl) {
         ImmutableSegmentImpl immutableSegmentImpl = (ImmutableSegmentImpl) immutableSegment;
         Map<String, ColumnIndexContainer> columnIndexContainerMap = immutableSegmentImpl.getIndexContainerMap();
-        columnIndexMap = getImmutableSegmentColumnIndexes(columnIndexContainerMap);
+        columnIndexMap = getSegmentColumnIndexes(columnIndexContainerMap);
       }
+    }else if(segmentDataManager instanceof RealtimeSegmentDataManager){
+      RealtimeSegmentDataManager realtimeSegmentDataManager = (RealtimeSegmentDataManager) segmentDataManager;
+      MutableSegmentImpl mutableSegment = (MutableSegmentImpl)realtimeSegmentDataManager.getSegment();
+      Map<String, IndexContainer> indexContainerMap = mutableSegment.getIndexContainerMap();
+      columnIndexMap = getSegmentColumnIndexes(indexContainerMap);
     }
     return columnIndexMap;
   }
@@ -87,9 +95,9 @@ public class SegmentMetadataFetcher {
    * Helper to loop through column index container to create a index map as follows for each column:
    * {<"bloom-filter", "YES">, <"dictionary", "NO">}
    */
-  private static Map<String, Map<String, String>> getImmutableSegmentColumnIndexes(Map<String, ColumnIndexContainer> columnIndexContainerMap) {
+  private static <T extends ColumnIndexContainer> Map<String, Map<String, String>> getSegmentColumnIndexes(Map<String,T> columnIndexContainerMap) {
     Map<String, Map<String, String>> columnIndexMap = new LinkedHashMap<>();
-    for (Map.Entry<String, ColumnIndexContainer> entry : columnIndexContainerMap.entrySet()) {
+    for (Map.Entry<String, T> entry : columnIndexContainerMap.entrySet()) {
       ColumnIndexContainer columnIndexContainer = entry.getValue();
       Map<String, String> indexStatus = new LinkedHashMap<>();
       if (Objects.isNull(columnIndexContainer.getBloomFilter())) {
