@@ -1555,6 +1555,31 @@
         <version>2.5</version>
       </plugin>
       <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <version>2.9.0</version>
+        <executions>
+          <execution>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <java>
+            <includes>
+              <include>src/main/java/**/*.java</include>
+              <include>src/test/java/**/*.java</include>
+            </includes>
+            <importOrder>
+              <order>,\#</order>
+            </importOrder>
+            <removeUnusedImports />
+          </java>
+        </configuration>
+      </plugin>
+      <plugin>
         <groupId>com.mycila</groupId>
         <artifactId>license-maven-plugin</artifactId>
         <version>4.0</version>
@@ -1597,9 +1622,6 @@
             <!-- Auto-generated target directories -->
             <exclude>target/**</exclude>
             <exclude>pinot-*/target/**</exclude>
-
-            <!-- Pinot Website (not part of the distribution) -->
-            <exclude>website/**</exclude>
 
             <!-- Docker and Kubernetes (not part of the distribution) -->
             <exclude>kubernetes/**</exclude>
@@ -1712,9 +1734,6 @@
 
             <!-- IDE files -->
             <exclude>**/*.iml</exclude>
-
-            <!-- Pinot Website (not part of the distribution) -->
-            <exclude>website/**</exclude>
 
             <!-- Docker and Kubernetes (not part of the distribution) -->
             <exclude>kubernetes/**</exclude>
